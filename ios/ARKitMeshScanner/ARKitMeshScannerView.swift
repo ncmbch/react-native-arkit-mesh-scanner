@@ -202,11 +202,10 @@ public class ARKitMeshScannerView: UIView {
         configuration.isAutoFocusEnabled = true
         configuration.isLightEstimationEnabled = true
 
-        // Reset scene reconstruction and anchors but NOT tracking.
-        // Keeping the same world origin that startCameraPreview() established
-        // ensures .showSceneUnderstanding wireframe aligns correctly with the camera.
-        // .resetTracking would create a new world origin causing visualization mismatches.
-        arView.session.run(configuration, options: [.resetSceneReconstruction, .removeExistingAnchors])
+        // Reset session completely for a fresh scan.
+        // NOTE: The caller must ensure startCameraPreview() has had time to fully
+        // initialize before calling this, otherwise the debug visualization may not render.
+        arView.session.run(configuration, options: [.resetSceneReconstruction, .removeExistingAnchors, .resetTracking])
         isScanning = true
         print("[ARKitMeshScanner] Session started with mesh reconstruction, isScanning=true")
 
