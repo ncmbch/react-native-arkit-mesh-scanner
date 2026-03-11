@@ -132,7 +132,11 @@ public class ARKitMeshScannerView: UIView {
         }
 
         addSubview(arView)
-        startCameraPreview()
+        // Don't start a camera preview session here.
+        // startScanning() will create the session with the correct configuration.
+        // Starting a basic session first and then reconfiguring with .resetTracking
+        // causes world origin mismatches on pushed screens, making the mesh
+        // wireframe appear at wrong positions.
     }
 
     private func updateOcclusionSettings() {
@@ -172,15 +176,8 @@ public class ARKitMeshScannerView: UIView {
         // Exit preview if active
         if previewController.isActive {
             previewController.exitPreviewMode()
+            arView.environment.background = .cameraFeed()
         }
-
-        // Pause current session before reconfiguring for a clean state transition.
-        // This prevents issues when transitioning from camera-preview mode to
-        // mesh reconstruction mode on a reused view.
-        arView.session.pause()
-
-        // Restore camera feed in case we were in preview mode
-        arView.environment.background = .cameraFeed()
 
         // Clear previous data
         diskMeshStorage.clear()
