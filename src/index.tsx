@@ -163,8 +163,11 @@ export const ARKitMeshScanner = forwardRef<
       () => ({
         startScanning: () => {
           const viewTag = getViewTag();
+          console.log('[ARKitMeshScanner] startScanning called, viewTag:', viewTag);
           if (viewTag) {
             ARKitMeshScannerModule.startScanning(viewTag);
+          } else {
+            console.warn('[ARKitMeshScanner] startScanning: viewTag is null, native view not ready');
           }
         },
 

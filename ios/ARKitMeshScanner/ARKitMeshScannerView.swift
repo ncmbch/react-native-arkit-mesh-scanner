@@ -97,8 +97,11 @@ public class ARKitMeshScannerView: UIView {
     public override func didMoveToWindow() {
         super.didMoveToWindow()
         if window == nil {
+            print("[ARKitMeshScanner] View removed from window, pausing session \(ObjectIdentifier(self))")
             arView.session.pause()
             isScanning = false
+        } else {
+            print("[ARKitMeshScanner] View added to window \(ObjectIdentifier(self))")
         }
     }
 
@@ -159,6 +162,8 @@ public class ARKitMeshScannerView: UIView {
     // MARK: - Public Methods
 
     @objc public func startScanning() {
+        print("[ARKitMeshScanner] startScanning() called on native view \(ObjectIdentifier(self)), window: \(String(describing: window))")
+
         guard ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) else {
             sendError("LiDAR ist auf diesem Gerät nicht verfügbar")
             return
@@ -208,11 +213,13 @@ public class ARKitMeshScannerView: UIView {
         // NOTE: Only reset tracking at start, NOT during scanning (causes tracking loss!)
         arView.session.run(configuration, options: [.resetSceneReconstruction, .removeExistingAnchors, .resetTracking])
         isScanning = true
+        print("[ARKitMeshScanner] Session started with mesh reconstruction, isScanning=true")
 
         // MEMORY SAFE: Use ARKit's debug wireframe only
         // This uses ZERO additional RAM - ARKit manages mesh internally
         if showMesh {
             arView.debugOptions.insert(.showSceneUnderstanding)
+            print("[ARKitMeshScanner] showSceneUnderstanding enabled")
         }
 
         sendMeshUpdate()

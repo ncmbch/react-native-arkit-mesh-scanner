@@ -68,10 +68,15 @@ class ARKitMeshScannerModule: NSObject {
     }
 
     @objc func startScanning(_ viewTag: NSNumber) {
+        print("[ARKitMeshScanner] Module.startScanning called with viewTag: \(viewTag)")
         DispatchQueue.main.async { [weak self] in
             guard let self = self,
-                  let uiManager = self.bridge.uiManager,
-                  let view = uiManager.view(forReactTag: viewTag) as? ARKitMeshScannerView else {
+                  let uiManager = self.bridge.uiManager else {
+                print("[ARKitMeshScanner] Module.startScanning: bridge or uiManager is nil")
+                return
+            }
+            guard let view = uiManager.view(forReactTag: viewTag) as? ARKitMeshScannerView else {
+                print("[ARKitMeshScanner] Module.startScanning: view not found for tag \(viewTag), found: \(String(describing: uiManager.view(forReactTag: viewTag)))")
                 return
             }
             view.startScanning()
