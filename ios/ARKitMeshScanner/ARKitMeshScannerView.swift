@@ -220,6 +220,14 @@ public class ARKitMeshScannerView: UIView {
         if showMesh {
             arView.debugOptions.insert(.showSceneUnderstanding)
             print("[ARKitMeshScanner] showSceneUnderstanding enabled")
+
+            // Re-apply after session fully initializes — on pushed screens,
+            // the debug option can get cleared during session startup
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                guard let self = self, self.isScanning, self.showMesh else { return }
+                self.arView.debugOptions.insert(.showSceneUnderstanding)
+                print("[ARKitMeshScanner] showSceneUnderstanding re-applied after delay")
+            }
         }
 
         sendMeshUpdate()
@@ -430,6 +438,13 @@ extension ARKitMeshScannerView: ARSessionDelegate {
             }
         case .normal:
             print("✅ Tracking normal")
+        }
+
+        // Re-apply mesh visualization when tracking state changes.
+        // showSceneUnderstanding can get lost when session.run() is called
+        // right after the view initializes (e.g., pushed screen).
+        if isScanning && showMesh {
+            arView.debugOptions.insert(.showSceneUnderstanding)
         }
     }
 
