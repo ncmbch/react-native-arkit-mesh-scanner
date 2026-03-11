@@ -132,11 +132,7 @@ public class ARKitMeshScannerView: UIView {
         }
 
         addSubview(arView)
-        // Don't start a camera preview session here.
-        // startScanning() will create the session with the correct configuration.
-        // Starting a basic session first and then reconfiguring with .resetTracking
-        // causes world origin mismatches on pushed screens, making the mesh
-        // wireframe appear at wrong positions.
+        startCameraPreview()
     }
 
     private func updateOcclusionSettings() {
@@ -206,9 +202,11 @@ public class ARKitMeshScannerView: UIView {
         configuration.isAutoFocusEnabled = true
         configuration.isLightEstimationEnabled = true
 
-        // MEMORY SAFETY: Reset session completely to free ARKit's internal mesh data
-        // NOTE: Only reset tracking at start, NOT during scanning (causes tracking loss!)
-        arView.session.run(configuration, options: [.resetSceneReconstruction, .removeExistingAnchors, .resetTracking])
+        // Reset scene reconstruction and anchors but NOT tracking.
+        // Keeping the same world origin that startCameraPreview() established
+        // ensures .showSceneUnderstanding wireframe aligns correctly with the camera.
+        // .resetTracking would create a new world origin causing visualization mismatches.
+        arView.session.run(configuration, options: [.resetSceneReconstruction, .removeExistingAnchors])
         isScanning = true
         print("[ARKitMeshScanner] Session started with mesh reconstruction, isScanning=true")
 
