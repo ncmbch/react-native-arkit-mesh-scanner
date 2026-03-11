@@ -83,10 +83,23 @@ public class ARKitMeshScannerView: UIView {
     }
 
     deinit {
+        arView?.session.pause()
         if let observer = memoryWarningObserver {
             NotificationCenter.default.removeObserver(observer)
         }
         diskMeshStorage.clear()
+    }
+
+    /// Pause the AR session when the view goes offscreen (e.g., navigating away
+    /// from the capture screen). This is critical — ARKit only supports one active
+    /// session at a time. If the old view's session is still running when a new
+    /// scanner view is created, mesh reconstruction won't start on the new session.
+    public override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window == nil {
+            arView.session.pause()
+            isScanning = false
+        }
     }
 
     /// Setup system memory pressure monitoring
@@ -153,8 +166,16 @@ public class ARKitMeshScannerView: UIView {
 
         // Exit preview if active
         if previewController.isActive {
-            exitPreviewMode()
+            previewController.exitPreviewMode()
         }
+
+        // Pause current session before reconfiguring for a clean state transition.
+        // This prevents issues when transitioning from camera-preview mode to
+        // mesh reconstruction mode on a reused view.
+        arView.session.pause()
+
+        // Restore camera feed in case we were in preview mode
+        arView.environment.background = .cameraFeed()
 
         // Clear previous data
         diskMeshStorage.clear()
@@ -238,11 +259,16 @@ public class ARKitMeshScannerView: UIView {
     @objc public func exitPreviewMode() {
         previewController.exitPreviewMode()
 
+        // Restore camera feed background (preview sets it to dark)
+        arView.environment.background = .cameraFeed()
+
         // Restore ARKit's mesh visualization
         if showMesh {
             arView.debugOptions.insert(.showSceneUnderstanding)
         }
 
+        // Resume session with camera-only config so the camera feed is live.
+        // startScanning() will pause and reconfigure if called next.
         startCameraPreview()
     }
 
